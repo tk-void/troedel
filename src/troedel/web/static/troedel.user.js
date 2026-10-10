@@ -329,7 +329,7 @@
     .copy.ok { background: #0d8a5f; color: #fff; }
     .foot { font-size: 12.5px; color: #6f7e89; text-align: center; margin-top: 8px; }
   `;
-  const LOGO = '<svg viewBox="0 0 64 64"><g transform="rotate(-32 33 33)"><path d="M14 33 24.5 21H50a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H24.5Z" fill="#1f4a3d"/><circle cx="23.5" cy="33" r="3.3" fill="#f6f2ea"/><rect x="31" y="28.5" width="17" height="3.2" rx="1.6" fill="#c65d3b"/></g></svg>';
+  const LOGO = '<svg viewBox="12 4 40 56"><g transform="rotate(10 32 32)"><path d="M32 8 49 24V52a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V24Z" fill="#1f4a3d"/><circle cx="32" cy="19.5" r="3.2" fill="#f6f2ea"/><rect x="21.500" y="28" width="21" height="6" rx="1.600" fill="#c65d3b"/><rect x="29" y="28" width="6" height="22" rx="1.600" fill="#c65d3b"/></g></svg>';
 
   // Everything that comes from Trödel is text, never markup.
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

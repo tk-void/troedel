@@ -1,4 +1,8 @@
+<p align="center"><img src="src/troedel/web/static/logo.svg" width="96" alt=""></p>
+
 # Trödel
+
+**English** · [Deutsch](README.de.md)
 
 **Photo in, classified ad out.** Take a few pictures of the thing you want to
 sell, add two words, and Trödel drafts the listing: title, description,

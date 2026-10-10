@@ -45,7 +45,9 @@ history. Treat that as irreversible.
 - English for code, comments, commit messages and docs. German only as
   interface text and as content of the German market (`markets/de.py`,
   templates, `web/text.py`, the `STRINGS`/`T` tables in the scripts and in
-  `desktop.py`, the read-me files of the downloads).
+  `desktop.py`, the read-me files of the downloads). `README.de.md` is the
+  German translation of `README.md`: change both together, the English one
+  leads.
 - Comments say **why**. If a line exists because something broke without
   it, say what broke.
 - Match the surrounding code. No new dependency without a reason that

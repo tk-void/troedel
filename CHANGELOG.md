@@ -28,3 +28,4 @@ First public version.
   the first start, and a switch to share it in the home network with the
   address and a QR code for the phone.
 - `troedel --open` opens the browser once the server is up.
+- The README in German (`README.de.md`).
