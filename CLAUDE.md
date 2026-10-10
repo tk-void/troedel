@@ -36,7 +36,9 @@ history. Treat that as irreversible.
    wrong, tell the maintainer.
 5. **Commit metadata is published too.** Author and committer must be the
    maintainer's public identity (a `noreply` address), never a private
-   mail address. No links to private sessions or tickets in messages.
+   mail address. No links to private sessions or tickets in messages, and
+   no `Co-Authored-By` line for an AI assistant or any other tool: the
+   maintainer is the only author on record.
 6. **Screenshots and sample data come from a demo instance** with made-up
    items, never from a real one. Images carry no EXIF data.
 
