@@ -44,6 +44,10 @@ Each installation gets its own access token, created when you press
   page shows the address to paste into the manager's "install from URL".
   Chrome also needs *Allow user scripts* switched on in Tampermonkey's
   extension details, or nothing runs at all.
+  Tampermonkey in Chrome sends every script link through a page on
+  `tampermonkey.net`, with the script's address after the `#`. That part is
+  not sent to their server, but the page can read it. If that page just
+  stays there, Tampermonkey is switched off or lacks the permission above.
 - Switching the helper off in Trödel revokes every token at once.
 - Requests are made by the userscript manager, not by the marketplace's
   page, so the page never sees the token.
