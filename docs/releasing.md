@@ -16,6 +16,11 @@ which runs the checks again and then publishes, on the releases page:
 - the container image `ghcr.io/<owner>/troedel:<version>` and `:latest`, for
   amd64 and arm64.
 
+The release is created as a draft first. Each build job uploads its own
+files into it, and the last job makes it public once every file is there. A
+failed run leaves a draft behind that nobody else sees; running the failed
+jobs again continues with it.
+
 ## Steps
 
 1. Set the version in `pyproject.toml` and `src/troedel/__init__.py`. The

@@ -3,6 +3,11 @@ name: Release
 # Pushing a tag like v0.2.0 builds everything and publishes a release:
 # the Windows and macOS downloads, the Python packages and the container image.
 # How to cut one: docs/releasing.md.
+#
+# The release starts as a draft, each build job puts its own files into it,
+# and only when all of them are through does it become visible. Handing the
+# files from job to job as artifacts instead failed at the last step, with
+# everything built and nothing published.
 on:
   push:
     tags: ["v*"]
@@ -24,23 +29,42 @@ jobs:
       - run: ruff check .
       - run: pytest -q
 
-  python:
+  draft:
     needs: check
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Draft release, unless a run before this one made it
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --draft --title "Trödel ${GITHUB_REF_NAME#v}" --generate-notes --verify-tag
+
+  python:
+    needs: draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install uv && uv build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: python
-          path: dist/*
+      - run: gh release upload "$GITHUB_REF_NAME" dist/*.whl dist/*.tar.gz --clobber
 
   windows:
-    needs: check
+    needs: draft
     runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,16 +77,16 @@ jobs:
       - run: python packaging/build.py windows
       - run: packaging/windows/smoke.ps1
         shell: pwsh
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows
-          path: |
-            dist/*.zip
-            dist/*-setup.exe
+      - run: gh release upload "$GITHUB_REF_NAME" dist/*.zip dist/*-setup.exe --clobber
+        shell: bash
 
   macos:
-    needs: check
+    needs: draft
     runs-on: macos-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -71,10 +95,7 @@ jobs:
       - run: pip install uv
       - run: python packaging/build.py macos
       - run: packaging/macos/smoke.sh
-      - uses: actions/upload-artifact@v4
-        with:
-          name: macos
-          path: dist/*.dmg
+      - run: gh release upload "$GITHUB_REF_NAME" dist/*.dmg --clobber
 
   image:
     needs: check
@@ -107,18 +128,19 @@ jobs:
             org.opencontainers.image.licenses=MIT
             org.opencontainers.image.version=${{ github.ref_name }}
 
-  release:
+  publish:
     needs: [python, windows, macos, image]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-      - name: Publish
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" artifacts/* --title "Trödel ${GITHUB_REF_NAME#v}" --generate-notes --verify-tag
+      - name: Everything is there
+        run: |
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | tee files.txt
+          for kind in '\.whl$' '\.tar\.gz$' 'windows-x64\.zip$' 'windows-x64-setup\.exe$' 'macos-arm64\.dmg$'; do
+            grep -q -- "$kind" files.txt || { echo "missing: $kind"; exit 1; }
+          done
+      - run: gh release edit "$GITHUB_REF_NAME" --draft=false --latest
