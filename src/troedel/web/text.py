@@ -76,6 +76,8 @@ ERRORS = {
     "unavailable": "Der KI-Dienst ist gerade ausgeschöpft oder nicht erreichbar. Später erneut versuchen.",
     "not_configured": "Es ist noch kein KI-Anbieter eingerichtet. Das geht in den Einstellungen.",
     "auth": "Der KI-Dienst hat den Zugang abgelehnt. Bitte den Schlüssel in den Einstellungen prüfen.",
+    "signin": "Das Programm „claude“ ist auf diesem Rechner nicht angemeldet. Einmal im Terminal „claude“ starten "
+    "und dort anmelden, dann erneut versuchen.",
     "model": "Der KI-Dienst kennt das eingestellte Modell nicht. Bitte in den Einstellungen prüfen.",
     "declined": "Der KI-Dienst hat die Anfrage zu diesen Fotos abgelehnt.",
     "invalid": "Die Antwort des KI-Dienstes war unbrauchbar. Bitte erneut versuchen.",

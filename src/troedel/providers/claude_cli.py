@@ -182,7 +182,7 @@ class ClaudeCliProvider:
             if result.get("api_error_status") == 429 or any(h in text.lower() for h in LIMIT_HINTS):
                 raise ProviderUnavailable(detail)
             if "login" in text.lower() or "authenticat" in text.lower():
-                raise ProviderError("claude is not signed in on this machine", "auth")
+                raise ProviderError("claude is not signed in on this machine", "signin")
             raise ProviderError(detail)
         data = result.get("structured_output")
         if not isinstance(data, dict):

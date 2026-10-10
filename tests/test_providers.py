@@ -262,6 +262,13 @@ class TestClaudeCli:
         with pytest.raises(ProviderUnavailable):
             ClaudeCliProvider.read(out, "", 1, SCHEMA, "opus")
 
+    def test_not_signed_in_does_not_ask_for_a_key(self) -> None:
+        """There is no key to check with this provider."""
+        out = json.dumps({"type": "result", "subtype": "success", "is_error": True, "result": "Please run /login"})
+        with pytest.raises(ProviderError) as caught:
+            ClaudeCliProvider.read(out, "", 1, SCHEMA, "opus")
+        assert caught.value.code == "signin"
+
     def test_no_output(self) -> None:
         with pytest.raises(ProviderError):
             ClaudeCliProvider.read("", "command failed", 1, SCHEMA, "opus")
