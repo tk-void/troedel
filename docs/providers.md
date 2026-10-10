@@ -63,7 +63,10 @@ OpenRouter and LM Studio work this way.
 
 Uses the `claude` program that is installed and signed in on the same
 machine, so it only makes sense when Trödel runs directly on your computer,
-not in a container.
+not in a container. Trödel looks for it on the `PATH` and in the folders it
+is usually installed in (`~/.local/bin`, `~/.claude/local`, Homebrew's and
+npm's folders), because a program started from the Finder or the Start menu
+does not get the `PATH` of a terminal.
 
 Read this before using it:
 

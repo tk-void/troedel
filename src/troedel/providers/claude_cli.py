@@ -22,7 +22,9 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
+from pathlib import Path
 
 from .base import Answer, Image, ProviderError, ProviderNotConfigured, ProviderUnavailable, Schema, checked, strict
 
@@ -48,6 +50,36 @@ SWITCHES = [
 is what lets photos travel as content blocks; it requires the same format
 out, which requires ``--verbose``."""
 
+KEPT = ("USERPROFILE", "APPDATA", "LOCALAPPDATA", "SYSTEMROOT", "PATHEXT", "USER", "LOGNAME")
+"""What the program gets from the environment besides PATH and HOME. On
+Windows it finds its sign-in through these and does not start without
+SYSTEMROOT; on macOS the keychain wants the user name."""
+
+
+def usual_places() -> list[Path]:
+    """Where the program and the ``node`` it may need get installed.
+
+    A program started from the Finder, the Dock or the Start menu does not
+    get the PATH of a terminal: on macOS that is ``/usr/bin:/bin:/usr/sbin:
+    /sbin``, so ``claude`` was reported missing in the window although it
+    ran fine in a shell."""
+    home = Path.home()
+    places = [home / ".local" / "bin", home / ".claude" / "local", home / ".npm-global" / "bin"]
+    if sys.platform == "win32":
+        if os.environ.get("APPDATA"):
+            places.append(Path(os.environ["APPDATA"]) / "npm")
+    else:
+        places += [Path("/opt/homebrew/bin"), Path("/usr/local/bin")]
+    return places
+
+
+def search_path() -> str:
+    """PATH, followed by the usual places that are not on it."""
+    parts = [part for part in os.environ.get("PATH", "").split(os.pathsep) if part]
+    parts += [str(place) for place in usual_places() if str(place) not in parts and place.is_dir()]
+    return os.pathsep.join(parts)
+
+
 LIMIT_HINTS = ("usage limit", "rate limit", "limit reached", "quota", "overloaded")
 
 
@@ -56,7 +88,8 @@ class ClaudeCliProvider:
 
     def __init__(self, model: str = "", binary: str = "claude", timeout: float = 240.0) -> None:
         self.model = model or DEFAULT_MODEL
-        self.binary = shutil.which(binary) or ""
+        self.path = search_path()
+        self.binary = shutil.which(binary, path=self.path) or ""
         if not self.binary:
             raise ProviderNotConfigured(f"{binary!r} is not installed or not on PATH", "cli")
         self.timeout = timeout
@@ -95,10 +128,13 @@ class ClaudeCliProvider:
         # would be nothing here to read.
         with tempfile.TemporaryDirectory(prefix="troedel-ask-") as workdir:
             env = {
-                "PATH": os.environ.get("PATH", ""),
+                # The same PATH the program was found on: installed through
+                # npm it is a script that needs ``node`` from there.
+                "PATH": self.path,
                 "HOME": os.environ.get("HOME", workdir),
                 "LANG": "C.UTF-8",
                 "DISABLE_AUTOUPDATER": "1",
+                **{name: os.environ[name] for name in KEPT if name in os.environ},
             }
             try:
                 # The prompt goes in on stdin: it does not show up in the

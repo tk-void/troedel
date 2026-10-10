@@ -454,7 +454,7 @@ class TestSettings:
         """A greyed-out test button without a reason is a dead end."""
         user.post("/settings/provider", data={"provider": "gemini"})
         assert "Es fehlt noch der API-Schlüssel" in user.get("/settings").text
-        monkeypatch.setattr("shutil.which", lambda name: None)
+        monkeypatch.setattr("shutil.which", lambda name, path=None: None)
         user.post("/settings/provider", data={"provider": "claude-cli"})
         page = user.get("/settings").text
         assert "nicht installiert" in page and "Docker-Container" in page

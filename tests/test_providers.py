@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
 from types import SimpleNamespace
 from typing import Any
 
@@ -267,6 +269,21 @@ class TestClaudeCli:
     def test_missing_binary(self) -> None:
         with pytest.raises(ProviderNotConfigured):
             ClaudeCliProvider(binary="definitely-not-installed-anywhere")
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="needs an executable script")
+    def test_found_without_the_path_of_a_terminal(self, tmp_path, monkeypatch) -> None:
+        """Started from the Finder, Trödel gets a PATH without the folders
+        the program is installed in."""
+        program = tmp_path / ".local" / "bin" / "claude"
+        program.parent.mkdir(parents=True)
+        program.write_text("#!/bin/sh\n")
+        program.chmod(0o755)
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("PATH", "/usr/bin:/bin")
+        provider = ClaudeCliProvider()
+        assert provider.binary == str(program)
+        assert provider.path.split(os.pathsep)[:2] == ["/usr/bin", "/bin"]
+        assert str(program.parent) in provider.path.split(os.pathsep)
 
 
 def test_build_says_what_is_missing() -> None:
