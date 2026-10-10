@@ -31,7 +31,7 @@ try {
     Stop-Process -Id $server.Id -Force
 }
 
-& $python -I -c "import tkinter, segno, rembg, onnxruntime, pillow_heif, argon2; tkinter.Tcl().eval('package require Tk'); print('imports ok')"
+& $python -I -c "import tkinter, segno, rembg, onnxruntime, pillow_heif, argon2; tkinter.Tk().destroy(); print('imports ok')"
 if ($LASTEXITCODE -ne 0) { throw "a bundled package does not load" }
 
 # The way a double-click starts it: no console, the window.

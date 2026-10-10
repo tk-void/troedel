@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import socket
 import sys
 import threading
@@ -163,7 +164,17 @@ class Server:
             self._app = (self._make_app or _create_app)(settings)
             self._uvicorn = uvicorn.Server(
                 uvicorn.Config(
-                    self._app, host=host, port=port, log_level="warning", proxy_headers=False, server_header=False
+                    self._app,
+                    host=host,
+                    port=port,
+                    log_level="warning",
+                    proxy_headers=False,
+                    server_header=False,
+                    # uvicorn's own logging setup asks the console whether it
+                    # can do colours. Without a console (pythonw on Windows)
+                    # there is nothing to ask and the server never starts.
+                    # Its messages go to our log file through the root logger.
+                    log_config=None,
                 )
             )
         except Exception:
@@ -526,6 +537,12 @@ def run(settings: Settings) -> int:
         print(T["no_tk"])  # noqa: T201
         return 2
     settings.data_dir.mkdir(parents=True, exist_ok=True)
+    # Without a console the output streams are None, and any library that
+    # writes to them or asks them something raises. Give them somewhere to go.
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115 - lives as long as the process
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
     # Started by double-click there is no terminal, and on Windows not even
     # an error stream: without a file, whatever goes wrong leaves no trace.
     handler = RotatingFileHandler(settings.data_dir / "troedel.log", maxBytes=500_000, backupCount=1, encoding="utf-8")

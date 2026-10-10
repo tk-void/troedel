@@ -504,7 +504,7 @@ class TestFillHelper:
         # to paste into a userscript manager that did not open by itself.
         page = user.get(response.headers["location"]).text
         link = re.search(r'href="(/troedel\.user\.js\?install=[^"]+)"', page).group(1)
-        assert f'{link}</code>' in page
+        assert f"{link}</code>" in page
         script = site.stranger().get(link)
         assert script.status_code == 200
         return re.search(r"const TOKEN = '([^']+)'", script.text).group(1)

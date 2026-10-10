@@ -17,7 +17,7 @@ python="$app/Contents/Resources/python/bin/python3"
 codesign --verify "$app"
 plutil -lint "$app/Contents/Info.plist" >/dev/null
 
-"$python" -I -B -c "import tkinter, segno, rembg, onnxruntime, pillow_heif, argon2; tkinter.Tcl().eval('package require Tk'); print('imports ok')"
+"$python" -I -B -c "import tkinter, segno, rembg, onnxruntime, pillow_heif, argon2; tkinter.Tk().destroy(); print('imports ok')"
 
 # Straight from the read-only image: the app must not need to write into itself.
 export TROEDEL_DATA_DIR="$work/data" TROEDEL_PORT=8765

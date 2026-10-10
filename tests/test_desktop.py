@@ -165,3 +165,16 @@ def test_showing_the_folder_survives_a_missing_file_manager(monkeypatch, tmp_pat
     monkeypatch.setattr(subprocess, "Popen", gone)
     monkeypatch.setattr(desktop.sys, "platform", "linux")
     desktop.show_folder(tmp_path)
+
+
+def test_starts_without_a_console(settings, monkeypatch):
+    """Started by double-click on Windows there is no console at all: the
+    output streams are None, and whatever asks them a question crashes."""
+    monkeypatch.setattr(desktop.sys, "stdout", None)
+    monkeypatch.setattr(desktop.sys, "stderr", None)
+    server = desktop.Server(replace(settings, port=free_port()))
+    try:
+        server.start(lan=False)
+        wait_for(server, "running")
+    finally:
+        server.stop()
