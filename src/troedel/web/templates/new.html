@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Neues Teil · Trödel{% endblock %}
+{% block body_class %}with-bar{% endblock %}
+{% block nav_left %}<a class="back" href="/">{{ icon('back') }}Sachen</a>{% endblock %}
+{% block nav_title %}Neues Teil{% endblock %}
+{% block content %}
+<h1 class="large-title" data-large-title>Neues Teil</h1>
+
+{% if not provider_ready %}
+<a class="banner" href="/settings#ai">{{ icon('magic') }}<div><strong>Noch kein KI-Anbieter eingerichtet</strong><span>Fotos kannst du schon hochladen, geschrieben wird erst danach.</span></div></a>
+{% endif %}
+
+<form id="new-item" autocomplete="off">
+  <input type="file" id="files" accept="image/*" multiple class="sr" aria-label="Fotos wählen">
+
+  <label class="capture" id="capture" for="files">
+    <span class="circle">{{ icon('camera') }}</span>
+    <strong>Fotos aufnehmen</strong>
+    <span>oder aus der Mediathek wählen · bis zu {{ max_photos }}</span>
+  </label>
+  <div class="previews" id="previews" hidden></div>
+
+  <h2 class="section-title">Was ist es?</h2>
+  <textarea class="keywords" id="keywords" name="keywords" rows="3" maxlength="500"
+    placeholder="Kinderschuhe Gr. 27, zweimal getragen"></textarea>
+
+  <h2 class="section-title">Produktname</h2>
+  <div class="group">
+    <label class="row"><input id="product" name="product" maxlength="200" placeholder="optional, z. B. Marke und Modell" style="text-align:left;color:var(--ink)"></label>
+  </div>
+  <p class="group-note">Titel, Text, Preis und Fotos macht Trödel. Du kannst gleich das nächste Teil aufnehmen.</p>
+</form>
+
+{% if recent %}
+<h2 class="section-title" style="margin-top:36px">Zuletzt</h2>
+{% from "_card.html" import card %}
+<div class="grid" id="grid">{% for item in recent %}{{ card(item) }}{% endfor %}</div>
+{% endif %}
+{% endblock %}
+{% block bar %}
+<div class="bar">
+  <div class="inner">
+    <button class="button primary" id="submit" form="new-item" type="submit" disabled>{{ icon('magic') }} Entwurf erstellen</button>
+  </div>
+</div>
+{% endblock %}
+{% block script %}<script nonce="{{ nonce }}">Troedel.newItem({{ max_photos }});</script>{% endblock %}

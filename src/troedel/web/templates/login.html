@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Anmelden · Trödel{% endblock %}
+{% block page %}
+<main class="gate">
+  <img class="logo" src="/static/logo.svg" alt="">
+  <h1>Trödel</h1>
+  <p class="lead">Foto rein, Verkaufsanzeige raus.</p>
+  {% if error %}<div class="banner">{{ icon('warning') }}<div><strong>{{ error }}</strong></div></div>{% endif %}
+  {% if insecure %}<div class="banner">{{ icon('lock') }}<div><strong>Verbindung nicht verschlüsselt</strong><span>Das Passwort geht hier lesbar über das Netz. Im eigenen Heimnetz vertretbar, sonst bitte HTTPS einrichten.</span></div></div>{% endif %}
+  <form method="post" action="/login">
+    <div class="group">
+      <label class="row"><input type="password" name="password" placeholder="Passwort" autocomplete="current-password" required autofocus aria-label="Passwort"></label>
+    </div>
+    <button class="button primary">Anmelden</button>
+  </form>
+</main>
+{% endblock %}

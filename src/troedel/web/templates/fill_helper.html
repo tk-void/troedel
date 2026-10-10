@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Ausfüllhilfe · Trödel{% endblock %}
+{% block nav_left %}<a class="back" href="/settings">{{ icon('back') }}Einstellungen</a>{% endblock %}
+{% block nav_title %}Ausfüllhilfe{% endblock %}
+{% block content %}
+<h1 class="large-title" data-large-title>Ausfüllhilfe</h1>
+<div style="max-width:640px">
+<p style="color:var(--muted);margin:-6px 4px 14px">Ein kleines Skript für deinen Browser. Es setzt bei Kleinanzeigen und Vinted Fotos, Titel, Text und Preis aus Trödel ins Formular. Kategorie, Zustand und das Abschicken machst du selbst.</p>
+
+<div class="banner">{{ icon('warning') }}<div><strong>Experimentell, auf eigene Verantwortung</strong>
+  <span>Die Nutzungsbedingungen der Plattformen können den Einsatz solcher Hilfen untersagen; im ungünstigen Fall wird ein Konto gesperrt. Trödel schickt nie selbst etwas ab und meldet sich nirgends an, eine Garantie ist das nicht. Ändert eine Plattform ihr Formular, funktioniert die Hilfe nicht mehr, bis sie angepasst ist – Kopieren geht immer.</span></div></div>
+
+<form method="post" action="/settings/fill-helper">
+  <div class="group">
+    {% if enabled %}
+    <input type="hidden" name="enable" value="0">
+    <button class="row danger">{{ icon('x') }}<span>Ausfüllhilfe ausschalten</span><span class="right">{{ installed }} {{ 'Installation' if installed == 1 else 'Installationen' }}</span></button>
+    {% else %}
+    <input type="hidden" name="enable" value="1">
+    <button class="row">{{ icon('check') }}<span>Verstanden, Ausfüllhilfe einschalten</span></button>
+    {% endif %}
+  </div>
+  {% if enabled %}<p class="group-note">Ausschalten trennt alle installierten Skripte von Trödel.</p>{% endif %}
+</form>
+
+{% if enabled %}
+<h2 class="section-title">Auf diesem Gerät installieren</h2>
+<div class="group steps">
+  <div class="row"><span class="symbol" style="background:var(--brand)">1</span>
+    <span><strong>Erweiterung für Userscripts installieren</strong><br><span class="small">Einmal je Browser. Sie führt das Skript aus.</span></span></div>
+  {% set managers = [
+    ('firefox', 'Firefox', 'Violentmonkey', 'https://addons.mozilla.org/firefox/addon/violentmonkey/', 'Open Source, keine weiteren Schalter nötig.'),
+    ('chrome', 'Chrome', 'Tampermonkey', 'https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo', 'Danach unter Erweiterungen → Tampermonkey → Details „Nutzerskripts zulassen“ einschalten.'),
+    ('edge', 'Edge', 'Tampermonkey', 'https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd', 'Danach in den Erweiterungen den Entwicklermodus einschalten.'),
+    ('safari', 'Safari (iPhone, iPad, Mac)', 'Userscripts', 'https://apps.apple.com/app/userscripts/id1463298887', 'Kostenlos, Open Source. Danach in den Safari-Erweiterungen einschalten und „Alle Websites“ erlauben.'),
+  ] %}
+  {% for id, browser, name, url, note in managers %}
+  <a class="row link manager" data-browser="{{ id }}" href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ icon('external') }}
+    <span><strong>{{ name }} für {{ browser }}</strong> <span class="chip ok this-browser" hidden>dieser Browser</span><br><span class="small">{{ note }}</span></span></a>
+  {% endfor %}
+  <form method="post" action="/fill-helper/install">
+    <button class="row"><span class="symbol" style="background:var(--brand)">2</span><span><strong>Skript für dieses Gerät erzeugen</strong><br><span class="small">Öffnet das Skript. Dein Userscript-Manager bietet „Installieren“ an (in Safari über ᴀA → Userscripts).</span></span></button>
+  </form>
+  <div class="row"><span class="symbol" style="background:var(--brand)">3</span>
+    <span>Einmal im selben Browser bei Kleinanzeigen und Vinted anmelden.</span></div>
+</div>
+<p class="group-note">Jedes Gerät bekommt sein eigenes Skript mit eigenem Zugang; der Link dazu gilt nur wenige Minuten. Das Skript darf Anzeigen und Fotos lesen und einen Artikel als „online“ markieren, sonst nichts. Nach einem Update von Trödel bei Bedarf neu erzeugen.</p>
+<p class="group-note">Auf dem iPhone lässt Kleinanzeigen im Browser nur mit „Desktop-Website anfordern“ (ᴀA) eine Anzeige aufgeben.</p>
+
+<h2 class="section-title">So geht's</h2>
+<div class="group">
+  <div class="row">{{ icon('share') }}<span>In Trödel <strong>Veröffentlichen → Kleinanzeigen</strong> oder <strong>Vinted</strong> → „Mit Ausfüllhilfe öffnen“</span></div>
+  <div class="row">{{ icon('magic') }}<span>Auf der Plattform erscheint unten <strong>Trödel</strong> → „Ausfüllen“</span></div>
+  <div class="row">{{ icon('check') }}<span>Kategorie und Zustand wählen, prüfen, selbst abschicken.</span></div>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+{% block script %}<script nonce="{{ nonce }}">Troedel.fillHelper();</script>{% endblock %}

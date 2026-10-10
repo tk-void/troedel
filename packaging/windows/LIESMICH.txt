@@ -1,0 +1,61 @@
+Trödel für Windows
+==================
+
+Diese ZIP-Datei ist die Fassung ohne Installation. Bequemer ist die Datei
+"...-setup.exe" von derselben Seite: Sie legt Trödel ins Startmenü.
+
+Starten
+-------
+1. Diesen Ordner an einen festen Platz legen, zum Beispiel in "Dokumente".
+2. Doppelklick auf "Troedel.bat".
+   Windows warnt beim ersten Mal vor einer unbekannten Datei:
+   "Weitere Informationen" und dann "Trotzdem ausführen" wählen.
+3. Ein kleines Fenster "Trödel" geht auf, kurz danach der Browser.
+   Solange das Fenster offen ist, läuft Trödel.
+4. Beim allerersten Start zeigt das Fenster einen Einrichtungscode. Den im
+   Browser eintippen und ein Passwort wählen. Danach in den Einstellungen
+   einen KI-Anbieter wählen.
+
+Vom Handy aus benutzen
+----------------------
+Im Fenster "Im Heimnetz freigeben" ankreuzen. Windows fragt einmal, ob der
+Zugriff im Netzwerk erlaubt sein soll: für "Private Netzwerke" zulassen.
+Das Fenster zeigt dann die Adresse fürs Handy und einen Code zum Scannen.
+Das Handy muss im selben WLAN sein. Nur im eigenen Heimnetz einschalten.
+
+Wo liegen meine Daten?
+----------------------
+Im Ordner "Troedel" in deinem Benutzerordner (C:\Benutzer\<Name>\Troedel):
+Anzeigen, Fotos und Einstellungen. Zum Sichern diesen Ordner kopieren.
+
+Neue Version
+------------
+Neue ZIP-Datei entpacken und ab dann daraus starten. Den alten Programmordner
+kannst du löschen; die Daten bleiben, wo sie sind.
+
+Beenden
+-------
+Das Fenster "Trödel" schließen.
+
+Es geht kein Fenster auf
+------------------------
+Im Ordner "Troedel" in deinem Benutzerordner liegt die Datei "troedel.log".
+Darin steht, woran es lag.
+
+Passwort vergessen
+------------------
+Trödel beenden. Im Programmordner in die Adresszeile des Explorers "cmd"
+tippen, Enter, dann eingeben:
+    python\python.exe -I -m troedel reset-password --data-dir "%USERPROFILE%\Troedel"
+Den angezeigten Code brauchst du nicht: Trödel neu starten, das Fenster
+zeigt einen neuen.
+
+Fotos werden nicht freigestellt
+-------------------------------
+Beim ersten Freistellen lädt Trödel ein Modell herunter; das dauert einige
+Minuten und braucht Internet. Bleibt es dabei, fehlt meist die Laufzeit
+"Microsoft Visual C++ Redistributable" (x64). Die gibt es kostenlos bei
+Microsoft; danach Trödel neu starten.
+
+Lizenz: MIT, siehe LICENSE.txt. Mitgelieferte Software Dritter: siehe
+THIRD_PARTY_NOTICES.txt und die Lizenzdateien unter python\.

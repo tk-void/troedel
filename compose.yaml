@@ -1,0 +1,38 @@
+# Trödel in a home network. Start with:  docker compose up -d
+# Then read the setup code:              docker compose logs troedel
+#
+# This publishes plain HTTP on port 8099. That is acceptable inside a network
+# you trust. For anything else put HTTPS in front; docs/security.md has a
+# ready example with Caddy.
+services:
+  troedel:
+    build: .
+    # image: ghcr.io/tk-void/troedel:latest   # once images are published
+    restart: unless-stopped
+    ports:
+      - "8099:8099"
+    # Everything Trödel stores ends up in ./data next to this file. Create
+    # the folder first (mkdir data) and run the container as its owner, so
+    # that it can write there: the output of `id -u` and `id -g`.
+    # Docker Desktop on macOS and Windows does not care which numbers these are.
+    user: "1000:1000"
+    volumes:
+      - ./data:/data
+    # The AI provider is chosen in the app. To fix it here instead, mount the
+    # key as a file; a variable would show up in `docker inspect`.
+    # environment:
+    #   TROEDEL_PROVIDER: anthropic
+    #   TROEDEL_API_KEY_FILE: /run/secrets/api_key
+    # secrets:
+    #   - api_key
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+# secrets:
+#   api_key:
+#     file: ./api_key.txt

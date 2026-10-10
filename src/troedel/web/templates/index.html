@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_card.html" import card %}
+{% block body_class %}with-bar{% endblock %}
+{% block nav_title %}Deine Sachen{% endblock %}
+{% block nav_right %}
+  <a class="nav-text-button wide-only" href="/new">{{ icon('camera') }} Neues Teil</a>
+  <a class="nav-button" href="/stats" aria-label="Statistik">{{ icon('chart') }}</a>
+  <a class="nav-button" href="/settings" aria-label="Einstellungen">{{ icon('gear') }}</a>
+{% endblock %}
+{% block content %}
+<h1 class="large-title" data-large-title>Deine Sachen</h1>
+
+{% if not provider_ready %}
+<a class="banner" href="/settings#ai">{{ icon('magic') }}<div><strong>Noch kein KI-Anbieter eingerichtet</strong><span>Ohne ihn kann Trödel keine Anzeigen schreiben. Jetzt einrichten.</span></div></a>
+{% endif %}
+
+{% if takings.count %}
+<a class="takings" href="/stats">
+  <span class="takings-number">{{ takings.total }} {{ CURRENCY }}</span>
+  <span class="takings-text">eingenommen · {{ pieces(takings.count) }} verkauft</span>
+  {{ icon('next') }}
+</a>
+{% endif %}
+
+<nav class="filter" aria-label="Filter">
+  {% for x in filters %}
+  <a href="/?f={{ x.id }}" class="{{ 'active' if x.active }}">{{ x.name }} <span class="count">{{ x.n }}</span></a>
+  {% endfor %}
+</nav>
+
+{% if items %}
+<div class="grid" id="grid">
+  {% for item in items %}{{ card(item) }}{% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <img src="/static/logo.svg" alt="">
+  {% if f in ('all', 'drafts') %}
+  <h2>Noch nichts auf dem Tisch</h2>
+  <p>Fotografier das erste Teil und schreib zwei Worte dazu. Den Rest erledigt Trödel.</p>
+  {% else %}
+  <h2>Hier ist gerade nichts</h2>
+  <p>Sobald etwas in diesen Zustand wechselt, taucht es hier auf.</p>
+  {% endif %}
+</div>
+{% endif %}
+<p class="footer">Trödel {{ version }}</p>
+{% endblock %}
+{% block bar %}
+<div class="bar narrow-only">
+  <div class="inner"><a class="button primary" href="/new">{{ icon('camera') }} Neues Teil</a></div>
+</div>
+{% endblock %}
+{% block script %}<script nonce="{{ nonce }}">Troedel.list();</script>{% endblock %}

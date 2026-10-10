@@ -1,0 +1,34 @@
+{% from "_icons.html" import icon %}
+{% macro card(item) -%}
+{%- set d = item.data -%}
+{%- set busy = item.status in ('queued', 'writing', 'revising') -%}
+<a class="card" href="/items/{{ item.id }}" data-id="{{ item.id }}" data-busy="{{ 1 if busy or item.photos|selectattr('state','equalto','pending')|list else 0 }}">
+  <div class="image{% if item.status in ('queued', 'writing') %} shimmer{% endif %}">
+    {% if item.photos %}<img src="{{ cover(item) }}" alt="" loading="lazy">{% endif %}
+    <div class="badges">
+      {% if busy %}
+        <span class="badge busy"><span class="dot"></span>{{ {'writing': 'Schreibt …', 'revising': 'Passt an …'}.get(item.status, 'Wartet') }}</span>
+      {% elif item.status == 'failed' %}
+        <span class="badge error">Fehler</span>
+      {% elif item.status == 'online' %}
+        <span class="badge online"><span class="dot"></span>Online · {{ item.listings.keys()|map('lookup', PLATFORM_SHORT)|join(' · ') }}</span>
+      {% elif item.status == 'sold' %}
+        <span class="badge sold">Verkauft</span>
+      {% elif item.status == 'archived' %}
+        <span class="badge archived">Archiv</span>
+      {% else %}
+        <span class="badge draft">{{ icon('pencil') }}Entwurf</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="text">
+    {% if d.title %}<div class="title">{{ d.title }}</div>
+    {% else %}<div class="title empty">{{ item.keywords or 'Ohne Stichwort' }}</div>{% endif %}
+    <div class="foot">
+      {% if item.status == 'sold' and item.sold_price is not none %}<span class="price proceeds">{{ item.sold_price }} {{ CURRENCY }}</span>
+      {% else %}<span class="price">{% if d.price is not none and d.price != '' %}{{ d.price }} {{ CURRENCY }}{% endif %}</span>{% endif %}
+      <span class="time">{{ date(item.created) }}</span>
+    </div>
+  </div>
+</a>
+{%- endmacro %}

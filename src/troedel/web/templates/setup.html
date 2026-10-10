@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Einrichten · Trödel{% endblock %}
+{% block page %}
+<main class="gate">
+  <img class="logo" src="/static/logo.svg" alt="">
+  <h1>Willkommen bei Trödel</h1>
+  <p class="lead">Lege ein Passwort fest. Ohne Passwort ist nichts erreichbar.</p>
+  {% if error %}<div class="banner">{{ icon('warning') }}<div><strong>{{ error }}</strong></div></div>{% endif %}
+  <form method="post" action="/setup">
+    <h2 class="section-title">Einrichtungscode</h2>
+    <div class="group code">
+      <label class="row"><input name="code" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" required autofocus aria-label="Einrichtungscode"></label>
+    </div>
+    <p class="group-note">Steht im Protokoll des Servers, direkt nach dem Start. So kann nur einrichten, wer Trödel auch betreibt.</p>
+    <h2 class="section-title">Passwort</h2>
+    <div class="group">
+      <label class="row"><input type="password" name="password" placeholder="Passwort" autocomplete="new-password" minlength="{{ min_password }}" required aria-label="Passwort"></label>
+      <label class="row"><input type="password" name="repeat" placeholder="Passwort wiederholen" autocomplete="new-password" minlength="{{ min_password }}" required aria-label="Passwort wiederholen"></label>
+    </div>
+    <p class="group-note">Mindestens {{ min_password }} Zeichen. Ein Satz, den du dir merken kannst, ist besser als ein kurzes Wort mit Sonderzeichen.</p>
+    <button class="button primary">Einrichten</button>
+  </form>
+</main>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% from "_icons.html" import icon %}<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}Trödel{% endblock %}</title>
+<meta name="theme-color" content="#f2f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#07090c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trödel">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/icons/icon-180.png">
+<link rel="preload" href="/static/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/static/theme.js?v={{ version }}"></script>
+<link rel="stylesheet" href="/static/troedel.css?v={{ version }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% block page %}
+<header class="nav" id="nav">
+  <div class="wrap">
+    <div class="nav-left">{% block nav_left %}
+      <a class="brand" href="/" aria-label="Trödel – Übersicht"><img src="/static/logo.svg" alt=""><span>Trödel</span></a>
+    {% endblock %}</div>
+    <div class="nav-title" id="nav-title">{% block nav_title %}{% endblock %}</div>
+    <div class="nav-right">{% block nav_right %}{% endblock %}</div>
+  </div>
+</header>
+<main class="wrap">
+{% block content %}{% endblock %}
+</main>
+{% block bar %}{% endblock %}
+{% block sheets %}{% endblock %}
+<div class="sheet-backdrop" id="sheet-backdrop"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/static/troedel.js?v={{ version }}"></script>
+{% endblock %}
+{% block script %}{% endblock %}
+</body>
+</html>

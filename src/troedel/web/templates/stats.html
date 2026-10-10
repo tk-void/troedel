@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Statistik · Trödel{% endblock %}
+{% block nav_left %}<a class="back" href="/">{{ icon('back') }}Sachen</a>{% endblock %}
+{% block nav_title %}Statistik{% endblock %}
+{% block content %}
+<h1 class="large-title" data-large-title>Statistik</h1>
+
+<div class="stats">
+{% if st.count %}
+  <section class="hero">
+    <div class="hero-label">Eingenommen</div>
+    <div class="hero-number">{{ st.total }} {{ CURRENCY }}</div>
+    <div class="hero-sub">{{ pieces(st.count) }} verkauft{% if st.this_month.total %} · {{ st.this_month.total }} {{ CURRENCY }} im {{ MONTHS[st.this_month.month - 1] }}{% endif %}</div>
+  </section>
+
+  <div class="figures">
+    <div class="figure"><span class="value">{{ st.average }} {{ CURRENCY }}</span><span class="name">je Teil im Schnitt</span></div>
+    <div class="figure">
+      <span class="value">{{ st.share ~ ' %' if st.share is not none else '–' }}</span><span class="name">vom Anzeigenpreis</span>
+    </div>
+    <div class="figure">
+      {% if st.days is not none %}<span class="value">{{ '< 1 Tag' if st.days == 0 else st.days ~ (' Tag' if st.days == 1 else ' Tage') }}</span>
+      {% else %}<span class="value">–</span>{% endif %}<span class="name">bis zum Verkauf</span>
+    </div>
+    <a class="figure" href="/?f=online"><span class="value">{{ st.online.value }} {{ CURRENCY }}</span><span class="name">{{ pieces(st.online.count) }} online</span></a>
+  </div>
+
+  <h2 class="section-title">Letzte {{ st.months|length }} Monate</h2>
+  <div class="group bars-card">
+    <div class="bars">
+      {% for m in st.months %}
+      <div class="column{{ ' current' if loop.last }}" title="{{ MONTHS[m.month - 1] }} {{ m.year }}: {{ m.total }} {{ CURRENCY }} · {{ m.count }} verkauft">
+        <span class="area">
+          <span class="amount">{{ m.total ~ ' ' ~ CURRENCY if m.total else '' }}</span>
+          <span class="bar-fill" style="--h: {{ m.percent }}"></span>
+        </span>
+        <span class="month">{{ MONTHS_SHORT[m.month - 1] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <h2 class="section-title">Verkauft über</h2>
+  <div class="group">
+    {% for k, c in st.channels %}
+    <div class="row">
+      {% if k in PLATFORM_BADGES %}<span class="platform-badge" style="background:{{ PLATFORM_COLORS[k] }}">{{ PLATFORM_BADGES[k] }}</span>
+      {% else %}<span class="platform-badge private">{{ icon('tag') }}</span>{% endif %}
+      <span>{{ SOLD_VIA.get(k, 'Ohne Angabe') }}</span>
+      <span class="right"><span class="small">{{ c.count }}×</span> <strong class="amount">{{ c.total }} {{ CURRENCY }}</strong></span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="section-title">Verkauft</h2>
+  <div class="group">
+    {% for item in st.sold %}
+    <a class="row link sale-row" href="/items/{{ item.id }}">
+      {% if item.photos %}<img src="{{ cover(item) }}" alt="" loading="lazy">{% else %}<span class="no-image"></span>{% endif %}
+      <span class="middle">
+        <span class="title">{{ item.data.title or item.keywords or 'Ohne Titel' }}</span>
+        <span class="small">{{ date(item.sold_at or item.updated) }}{% if item.sold_via %} · {{ SOLD_VIA.get(item.sold_via, item.sold_via) }}{% endif %}</span>
+      </span>
+      <span class="right">
+        <strong class="amount">{{ item.sold_price ~ ' ' ~ CURRENCY if item.sold_price is not none else '–' }}</strong>
+        {% if item.sold_price is not none and item.data.price and item.sold_price != item.data.price %}<span class="small struck">{{ item.data.price }} {{ CURRENCY }}</span>{% endif %}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <img src="/static/logo.svg" alt="">
+    <h2>Noch nichts verkauft</h2>
+    <p>Wenn ein Teil weg ist: im Artikel unter ⋯ „Als verkauft markieren“. Dann steht hier, was zusammenkommt.</p>
+  </div>
+{% endif %}
+
+  {% if st.online.count or st.drafts.count %}
+  <h2 class="section-title">Noch zu verkaufen</h2>
+  <div class="group">
+    <a class="row link" href="/?f=online"><span>Online</span><span class="right">{{ st.online.count }} · {{ st.online.value }} {{ CURRENCY }}</span></a>
+    <a class="row link" href="/?f=drafts"><span>Entwürfe</span><span class="right">{{ st.drafts.count }} · {{ st.drafts.value }} {{ CURRENCY }}</span></a>
+  </div>
+  <p class="group-note">Summe der Anzeigenpreise – so viel liegt noch auf dem Tisch.</p>
+  {% endif %}
+</div>
+{% endblock %}

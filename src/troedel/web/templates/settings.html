@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Einstellungen · Trödel{% endblock %}
+{% block nav_left %}<a class="back" href="/">{{ icon('back') }}Sachen</a>{% endblock %}
+{% block nav_title %}Einstellungen{% endblock %}
+{% block content %}
+<h1 class="large-title" data-large-title>Einstellungen</h1>
+<div style="max-width:640px">
+
+{% if welcome %}
+<div class="banner info">{{ icon('check') }}<div><strong>Passwort gesetzt.</strong><span>Jetzt noch den KI-Anbieter wählen, dann kann es losgehen.</span></div></div>
+{% endif %}
+{% set messages = {'wrong': 'Das aktuelle Passwort stimmt nicht.', 'mismatch': 'Die beiden neuen Passwörter stimmen nicht überein.', 'wait': 'Zu viele Versuche. Bitte kurz warten.', 'password_too_short': 'Das Passwort braucht mindestens ' ~ min_password ~ ' Zeichen.', 'password_too_long': 'Das Passwort ist zu lang.'} %}
+{% if error %}<div class="banner">{{ icon('warning') }}<div><strong>{{ messages.get(error, 'Das hat nicht geklappt.') }}</strong></div></div>{% endif %}
+
+<h2 class="section-title" id="ai">KI-Anbieter</h2>
+<form method="post" action="/settings/provider" id="provider-form">
+  <div class="group">
+    <label class="row"><span class="name">Anbieter</span>
+      <select name="provider" id="provider" {{ 'disabled' if locked.provider }}>
+        <option value="">– wählen –</option>
+        {% for k, info in providers.items() %}<option value="{{ k }}" {{ 'selected' if config.provider == k }}
+          data-key="{{ 1 if info.needs_key else 0 }}" data-model="{{ info.default_model }}" data-url="{{ info.default_base_url }}"
+          data-custom-url="{{ 1 if k in ('custom', 'ollama') else 0 }}" data-note="{{ provider_text[k][1] }}">{{ provider_text[k][0] }}</option>{% endfor %}
+      </select></label>
+    <label class="row" id="row-key"><span class="name">API-Schlüssel</span>
+      <input type="password" name="api_key" autocomplete="off" spellcheck="false" placeholder="{{ key_hint or 'einfügen' }}" {{ 'disabled' if locked.api_key }}></label>
+    <label class="row"><span class="name">Modell</span>
+      <input name="model" id="model" value="{{ config.model }}" autocomplete="off" spellcheck="false" {{ 'disabled' if locked.model }}></label>
+    <label class="row" id="row-url"><span class="name">Adresse</span>
+      <input name="base_url" id="base-url" value="{{ config.base_url }}" autocomplete="off" spellcheck="false" inputmode="url" {{ 'disabled' if locked.base_url }}></label>
+    <label class="row"><span class="name">Modell für „Aufgeräumt“</span>
+      <input name="model_distractors" value="{{ s.model_distractors }}" autocomplete="off" spellcheck="false" placeholder="wie oben"></label>
+  </div>
+  <p class="provider-note" id="provider-note"></p>
+  {% if locked.provider or locked.api_key or locked.model or locked.base_url %}<p class="group-note">Ausgegraute Felder sind über die Umgebung des Servers festgelegt (<code>TROEDEL_…</code>).</p>{% endif %}
+  <p class="group-note" id="key-note">Der Schlüssel liegt in einer eigenen Datei im Datenordner und wird nie wieder angezeigt. Leer lassen behält den gespeicherten.</p>
+  <div style="display:flex;gap:10px;margin-top:12px">
+    <button class="button primary">Sichern</button>
+    <button class="button" type="button" id="test-provider" {{ 'disabled' if not provider_ready }}>{{ icon('magic') }} Testen</button>
+  </div>
+  <div class="status-line{{ ' error' if provider_problem }}" id="test-result">{{ provider_problem }}</div>
+</form>
+
+<form method="post" action="/settings" id="settings">
+  <h2 class="section-title">Übergabe</h2>
+  <div class="group">
+    <label class="row"><span class="name">Ort</span><input name="location" value="{{ s.location }}" placeholder="z. B. Musterstadt"></label>
+    <label class="row"><span class="name">Abholung</span><input name="pickup" value="{{ s.pickup }}"></label>
+    <label class="row"><span class="name">Versand</span><input name="shipping" value="{{ s.shipping }}"></label>
+    <label class="row"><span class="name">Preise als VB</span><span class="right"><input type="checkbox" class="switch" name="negotiable" {{ 'checked' if s.negotiable == '1' }}></span></label>
+  </div>
+  <h2 class="section-title">Fußzeile</h2>
+  <div class="group"><label class="row"><textarea name="footer" rows="2">{{ s.footer }}</textarea></label></div>
+  <p class="group-note">Steht unter Anzeigen bei Kleinanzeigen, eBay und Facebook.</p>
+
+  <h2 class="section-title">Fotos</h2>
+  <div class="group">
+    <label class="row"><span class="name">Look für neue Fotos</span>
+      <select name="look" {{ 'disabled' if not cutout }}>{% for k, name in LOOKS.items() %}<option value="{{ k }}" {{ 'selected' if s.look == k }}>{{ name }}</option>{% endfor %}</select></label>
+  </div>
+  {% if cutout %}<p class="group-note">Je Artikel änderbar. Freistellen und Retusche laufen auf diesem Rechner, kein Foto geht dafür nach draußen. Die Modelle werden beim ersten Mal geladen.</p>
+  {% else %}<p class="group-note">Die Bildbearbeitung ist nicht installiert (<code>pip install "troedel[cutout]"</code>). Fotos bleiben, wie sie aufgenommen wurden.</p>{% endif %}
+  <div style="margin-top:12px"><button class="button primary">Sichern</button></div>
+</form>
+
+<h2 class="section-title">Veröffentlichen</h2>
+<div class="group">
+  <a class="row link" href="/fill-helper">{{ icon('magic') }}<span>Ausfüllhilfe für Kleinanzeigen &amp; Vinted</span><span class="right">{{ 'an' if s.fill_helper == '1' else 'aus' }}</span></a>
+</div>
+<p class="group-note">Experimentell. Füllt Formulare der Plattformen im eigenen Browser aus; abgeschickt wird nie automatisch.</p>
+
+<h2 class="section-title" id="access">Zugang</h2>
+<form method="post" action="/settings/password">
+  <div class="group">
+    <label class="row"><span class="name">Aktuelles Passwort</span><input type="password" name="current" autocomplete="current-password" required></label>
+    <label class="row"><span class="name">Neues Passwort</span><input type="password" name="new" autocomplete="new-password" minlength="{{ min_password }}" required></label>
+    <label class="row"><span class="name">Wiederholen</span><input type="password" name="repeat" autocomplete="new-password" minlength="{{ min_password }}" required></label>
+  </div>
+  <p class="group-note">Ein neues Passwort meldet alle anderen Geräte ab.{% if insecure %} Achtung: Die Verbindung ist nicht verschlüsselt, Passwörter gehen lesbar über das Netz.{% endif %}</p>
+  <div style="margin-top:12px"><button class="button">Passwort ändern</button></div>
+</form>
+<div class="group" style="margin-top:18px">
+  <form method="post" action="/logout"><button class="row">{{ icon('exit') }}<span>Abmelden</span></button></form>
+  <form method="post" action="/settings/sign-out-everywhere"><button class="row danger">{{ icon('exit') }}<span>Überall abmelden</span><span class="right">{{ sessions }} {{ 'Gerät' if sessions == 1 else 'Geräte' }}</span></button></form>
+</div>
+
+<h2 class="section-title">Daten</h2>
+<div class="group">
+  <a class="row link" href="/export.zip">{{ icon('download') }}<span>Alles exportieren</span></a>
+</div>
+<p class="group-note">Datenbank und Originalfotos als ZIP. Der API-Schlüssel ist nicht dabei. Für eine Sicherung reicht es auch, den Datenordner zu kopieren.</p>
+
+<h2 class="section-title">Über</h2>
+<div class="group">
+  <div class="row"><span class="name">Freistellen</span><span class="right">{{ cutout_model if cutout else 'nicht installiert' }}</span></div>
+  <div class="row"><span class="name">Version</span><span class="right">{{ version }}</span></div>
+</div>
+<p class="group-note">Auf dem iPhone: in Safari Teilen → „Zum Home-Bildschirm“, dann startet Trödel wie eine App.</p>
+</div>
+{% endblock %}
+{% block script %}
+<script nonce="{{ nonce }}">Troedel.settings({ saved: {{ saved|tojson }} });</script>
+{% endblock %}

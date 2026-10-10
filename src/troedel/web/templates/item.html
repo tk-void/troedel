@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% from "_sheet.html" import sheet_head %}
+{% block title %}{{ d.title or item.keywords or 'Artikel' }} · Trödel{% endblock %}
+{% block body_class %}with-bar{% endblock %}
+{% block nav_left %}<a class="back" href="/">{{ icon('back') }}Sachen</a>{% endblock %}
+{% block nav_title %}{{ d.title or item.keywords or 'Neues Teil' }}{% endblock %}
+{% block nav_right %}
+  <button class="nav-button" data-sheet="menu" aria-label="Weitere Aktionen">{{ icon('more') }}</button>
+{% endblock %}
+
+{% block content %}
+<div class="item">
+  {# ------------------------------------------------ photos ---- #}
+  <section class="left" aria-label="Fotos">
+    <div class="stage" id="stage">
+      <div class="carousel" id="carousel">
+        {% for p in item.photos %}
+        <div class="slide" data-photo="{{ p.id }}">
+          <img src="{{ photo_url(p) }}" data-original="{{ photo_url(p, shown='original') }}" alt="Foto {{ loop.index }}" {{ 'loading=lazy' if not loop.first }}>
+          {% if p.state == 'pending' %}<span class="running"><span class="spinner"></span></span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% if item.photos|length > 1 %}
+      <button class="pager prev-photo" type="button" data-page="-1" aria-label="Vorheriges Foto">{{ icon('back') }}</button>
+      <button class="pager next-photo" type="button" data-page="1" aria-label="Nächstes Foto">{{ icon('next') }}</button>
+      {% endif %}
+      <div class="top">
+        {% if item.status == 'online' %}<span class="badge online"><span class="dot"></span>Online</span>
+        {% elif item.status == 'sold' %}<span class="badge sold">Verkauft</span>
+        {% elif item.status == 'archived' %}<span class="badge archived">Archiv</span>
+        {% else %}<span></span>{% endif %}
+        {% if item.photos %}<button class="glass-button round" type="button" data-viewer aria-label="Fotos groß ansehen">{{ icon('expand') }}</button>{% endif %}
+      </div>
+      <span class="glass-button original-hint">Original</span>
+      <div class="bottom">
+        {% if cutout %}<button class="glass-button" data-sheet="look" aria-label="Look wählen">{{ icon('magic') }} {{ LOOKS[look] }}</button>{% else %}<span></span>{% endif %}
+        <button class="glass-button" data-sheet="photos" aria-label="Fotos bearbeiten">{{ icon('photos') }} {{ item.photos|length }}</button>
+      </div>
+    </div>
+    <div class="dots" id="dots">{% if item.photos|length > 1 %}{% for p in item.photos %}<span class="{{ 'active' if loop.first }}" data-dot="{{ loop.index0 }}"></span>{% endfor %}{% endif %}</div>
+  </section>
+
+  {# ------------------------------------------------ listing ---- #}
+  <section class="right" aria-label="Anzeige">
+    {% if writing %}
+    <div class="busy-note"><span class="spinner dark"></span> Trödel schreibt die Anzeige …</div>
+    <div class="skeleton shimmer" style="width:85%;height:26px;margin-top:22px"></div>
+    <div class="skeleton shimmer" style="width:30%;height:26px"></div>
+    <div class="skeleton shimmer"></div><div class="skeleton shimmer"></div><div class="skeleton shimmer" style="width:60%"></div>
+    {% elif item.status == 'failed' %}
+    <div class="notice error">{{ icon('warning') }}
+      <div><strong>Das hat nicht geklappt.</strong><br>{{ ERRORS.get(item.error, ERRORS.failed) }}
+        {% if item.error in ('not_configured', 'auth', 'model') %}<div class="action"><a class="button small" href="/settings#ai">{{ icon('gear') }} Einstellungen</a></div>{% endif %}
+        <div class="action"><button class="button small" data-rewrite>{{ icon('retry') }} Erneut versuchen</button></div>
+        {% if item.error_detail %}<details class="error-detail"><summary>Technische Meldung</summary>{{ item.error_detail }}</details>{% endif %}
+      </div>
+    </div>
+    {% elif item.error %}
+    <div class="notice error">{{ icon('warning') }}<div>Nichts geändert. {{ ERRORS.get(item.error, ERRORS.failed) }}
+      {% if item.error_detail %}<details class="error-detail"><summary>Technische Meldung</summary>{{ item.error_detail }}</details>{% endif %}</div></div>
+    {% endif %}
+
+    {% if d.title %}
+    <div class="head-block">
+      <textarea class="title-input" id="f-title" data-field="title" rows="1" aria-label="Titel" {{ 'data-changed' if 'title' in changed }}>{{ d.title }}</textarea>
+      <div class="title-counter" id="title-counter" data-max="65"></div>
+      <div class="price-row">
+        <label class="price-field" {{ 'data-changed' if 'price' in changed }}><input data-field="price" inputmode="numeric" value="{{ d.price }}" aria-label="Preis"><span>{{ CURRENCY }}</span></label>
+        {% if v.price is not none and v.price != '' %}
+        <button class="chip accent" id="price-chip" type="button">{{ icon('tag') }} Vorschlag {{ v.price }} {{ CURRENCY }}{% if v.price_min and v.price_max %} · {{ v.price_min }}–{{ v.price_max }}{% endif %}</button>
+        {% endif %}
+        {% if item.status == 'sold' %}
+        <button class="chip sold" type="button" data-sheet="sold">{{ icon('check') }} Verkauft{% if item.sold_price is not none %} für {{ item.sold_price }} {{ CURRENCY }}{% endif %}{% if item.sold_via %} · {{ PLATFORM_SHORT.get(item.sold_via, SOLD_VIA.get(item.sold_via, '')) }}{% endif %}</button>
+        {% else %}
+        {% for p in item.listings %}<span class="chip ok">{{ icon('check') }} {{ PLATFORM_SHORT[p] }}</span>{% endfor %}
+        {% endif %}
+      </div>
+      {% if v.price_reason %}<p class="price-info" id="price-info" hidden>{{ v.price_reason }}</p>{% endif %}
+    </div>
+
+    {% if d.to_check %}
+    <h2 class="section-title warn"><span>Bitte prüfen</span><span id="check-state"></span></h2>
+    <div class="group checklist" id="checklist">
+      {% for entry in d.to_check %}
+      <button type="button" class="row{{ ' done' if entry in checked }}" data-check="{{ entry }}"><span class="check-circle">{{ icon('check') }}</span><span>{{ entry }}</span></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2 class="section-title">Beschreibung</h2>
+    <div class="group"><label class="row"><textarea data-field="description" rows="4" aria-label="Beschreibung" {{ 'data-changed' if 'description' in changed }}>{{ d.description }}</textarea></label></div>
+
+    <h2 class="section-title">Fakten</h2>
+    <div class="group"><label class="row"><textarea data-field="facts" rows="3" placeholder="Ein Fakt pro Zeile" aria-label="Fakten" {{ 'data-changed' if 'facts' in changed }}>{{ (d.facts or [])|join('\n') }}</textarea></label></div>
+
+    <h2 class="section-title">Details</h2>
+    <div class="group">
+      <label class="row"><span class="name">{{ FIELDS.condition }}</span>
+        <select data-field="condition" {{ 'data-changed' if 'condition' in changed }}>{% for k, name in CONDITIONS.items() %}<option value="{{ k }}" {{ 'selected' if k == d.condition }}>{{ name }}</option>{% endfor %}</select></label>
+      {% for k in ('size', 'brand', 'color', 'material', 'model', 'category') %}
+      <label class="row"><span class="name">{{ FIELDS[k] }}</span><input data-field="{{ k }}" value="{{ d[k] or '' }}" placeholder="–" {{ 'data-changed' if k in changed }}></label>
+      {% endfor %}
+      <label class="row"><span class="name">{{ FIELDS.shipping }}</span>
+        <select data-field="shipping" {{ 'data-changed' if 'shipping' in changed }}>{% for k, name in SHIPPING.items() %}<option value="{{ k }}" {{ 'selected' if k == d.shipping }}>{{ name }}</option>{% endfor %}</select></label>
+    </div>
+
+    <h2 class="section-title">Mängel</h2>
+    <div class="group"><label class="row"><textarea data-field="defects" rows="1" placeholder="Keine bekannt" aria-label="Mängel" {{ 'data-changed' if 'defects' in changed }}>{{ (d.defects or [])|join('\n') }}</textarea></label></div>
+
+    <p class="meta">{% if v._model %}Geschrieben von {{ model_name(v._model) }} · {% endif %}angelegt {{ date(item.created) }}</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% block bar %}
+<div class="bar">
+  <div class="inner">
+    {% if item.status == 'revising' %}
+      <div class="bar-status"><span class="spinner dark"></span> Wird angepasst …</div>
+    {% elif d.title %}
+      <button class="button tonal" data-sheet="revise">{{ icon('magic') }} Anpassen</button>
+      <button class="button primary" data-sheet="publish">{{ icon('share') }} Veröffentlichen</button>
+    {% elif writing %}
+      <div class="bar-status"><span class="spinner dark"></span> Schreibt …</div>
+    {% else %}
+      <button class="button primary" data-rewrite>{{ icon('magic') }} Anzeige schreiben</button>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block sheets %}
+<input type="file" id="more-photos" accept="image/*" multiple class="sr">
+
+{# ---- more menu ---- #}
+<div class="sheet" id="sheet-menu" role="dialog" aria-label="Aktionen">
+  {{ sheet_head('', right='<button class="sheet-text-button" data-close>Fertig</button>') }}
+  <div class="sheet-content">
+    <div class="group">
+      <label class="row link" for="more-photos">{{ icon('camera') }}<span>Fotos hinzufügen</span></label>
+      <a class="row link" href="/items/{{ item.id }}/photos">{{ icon('download') }}<span>Fotos sichern</span></a>
+      <button class="row" data-sheet="rewrite">{{ icon('retry') }}<span>Komplett neu schreiben</span></button>
+    </div>
+    <div class="group">
+      {% if item.status != 'sold' %}<button class="row" data-sheet="sold">{{ icon('tag') }}<span>Als verkauft markieren</span></button>
+      {% else %}<button class="row" data-sheet="sold">{{ icon('tag') }}<span>Verkauf bearbeiten</span></button>{% endif %}
+      {% if item.status in ('sold', 'archived') %}<button class="row" data-status="draft">{{ icon('retry') }}<span>Wieder aktiv</span></button>{% endif %}
+      {% if item.status != 'archived' %}<button class="row" data-status="archived">{{ icon('archive') }}<span>Archivieren</span></button>{% endif %}
+    </div>
+    {% if item.status == 'sold' and item.listings %}
+    <p class="group-note" style="margin-bottom:12px">Nicht vergessen: die Anzeige auch auf {{ item.listings.keys()|map('lookup', PLATFORM_NAMES)|join(', ') }} löschen.</p>
+    {% endif %}
+    <div class="group"><button class="row danger" data-delete>{{ icon('trash') }}<span>Artikel löschen</span></button></div>
+  </div>
+</div>
+
+{# ---- sold ---- #}
+{%- set via = item.sold_via if item.status == 'sold' else (item.listings|list|first if item.listings|length == 1 else '') %}
+{%- set amount = item.sold_price if item.status == 'sold' and item.sold_price is not none else d.price %}
+<div class="sheet" id="sheet-sold" role="dialog" aria-label="Verkauft">
+  {{ sheet_head('Verkauft', left='<button class="sheet-text-button" data-close>Abbrechen</button>') }}
+  <div class="sheet-content">
+    <form id="sale-form">
+      <label class="amount-field"><input name="price" inputmode="decimal" autocomplete="off" value="{{ amount if amount is not none }}" placeholder="0" aria-label="Verkauft für"><span>{{ CURRENCY }}</span></label>
+      <p class="amount-hint">{% if d.price is not none and d.price != '' %}angeboten für {{ d.price }} {{ CURRENCY }}{% else %}Wofür ist es weggegangen?{% endif %}</p>
+      <h2 class="section-title">Verkauft über</h2>
+      <div class="group choice-list">
+        {% set order = (item.listings|list) + (SOLD_VIA.keys()|reject('in', item.listings)|list) %}
+        {% for k in order %}
+        <label class="row">
+          {% if k in PLATFORM_BADGES %}<span class="platform-badge" style="background:{{ PLATFORM_COLORS[k] }}">{{ PLATFORM_BADGES[k] }}</span>
+          {% else %}<span class="platform-badge private">{{ icon('tag') }}</span>{% endif %}
+          <span>{{ SOLD_VIA[k] }}{% if k in item.listings %} <span class="small">· war online</span>{% endif %}</span>
+          <input type="radio" name="via" value="{{ k }}" {{ 'checked' if k == via }}>
+          <span class="choice-check">{{ icon('check') }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% if item.listings and item.status != 'sold' %}
+      <p class="group-note">Danach die Anzeige{{ 'n' if item.listings|length > 1 }} auf {{ item.listings.keys()|map('lookup', PLATFORM_NAMES)|join(' und ') }} löschen.</p>
+      {% endif %}
+      <div style="margin-top:18px"><button class="button primary full" style="height:52px;font-size:16.5px">{{ icon('check') }} {{ 'Sichern' if item.status == 'sold' else 'Als verkauft markieren' }}</button></div>
+    </form>
+  </div>
+</div>
+
+{# ---- look ---- #}
+<div class="sheet" id="sheet-look" role="dialog" aria-label="Look">
+  {{ sheet_head('Look', right='<button class="sheet-text-button" data-close>Fertig</button>') }}
+  <div class="sheet-content">
+    <div class="look-grid" id="look-grid">
+      {% for k, name in LOOKS.items() %}
+      <button type="button" class="look-tile{{ ' active' if k == look }}" data-look="{{ k }}">
+        <div class="image"></div>
+        <div class="name">{{ name }}{% if k == look %}{{ icon('check') }}{% endif %}</div>
+        <div class="hint">{{ LOOK_HINTS[k] }}</div>
+      </button>
+      {% endfor %}
+    </div>
+    <p class="group-note" style="margin-top:16px">Gilt für alle Fotos. Foto gedrückt halten zeigt das Original.</p>
+    {% if look != 'original' %}<div style="margin-top:12px"><button class="button full" data-look-again>{{ icon('retry') }} {{ LOOKS[look] }} neu erzeugen</button></div>{% endif %}
+  </div>
+</div>
+
+{# ---- photos ---- #}
+<div class="sheet" id="sheet-photos" role="dialog" aria-label="Fotos">
+  {{ sheet_head('Fotos', right='<button class="sheet-text-button" data-close>Fertig</button>') }}
+  <div class="sheet-content">
+    <div class="group">
+      {% for p in item.photos %}
+      <div class="photo-row" data-photo-row="{{ p.id }}">
+        <img src="{{ photo_url(p, thumb=True) }}" alt="">
+        <div class="middle">{{ 'Titelbild' if loop.first else 'Foto ' ~ loop.index }}
+          <span class="small">{% if p.state == 'pending' %}wird bearbeitet …{% elif p.state == 'failed' %}Bearbeiten fehlgeschlagen{% elif p.shown == 'original' %}Original{% else %}{{ LOOKS[p.look] }}{% endif %}</span></div>
+        {% if p.state == 'done' and p.look != 'original' %}
+        <input type="checkbox" class="switch" data-photo-look="{{ p.id }}" data-look-name="{{ p.look }}" {{ 'checked' if p.shown != 'original' }} aria-label="{{ LOOKS[p.look] }} verwenden">
+        {% elif p.state == 'failed' %}
+        <button class="icon-button" data-retry-photo="{{ p.id }}" aria-label="Erneut versuchen">{{ icon('retry') }}</button>
+        {% endif %}
+        <button class="icon-button" data-move-photo="{{ p.id }}" {{ 'disabled' if loop.first }} aria-label="Nach vorn">{{ icon('up') }}</button>
+        <button class="icon-button danger" data-delete-photo="{{ p.id }}" {{ 'disabled' if item.photos|length <= 1 }} aria-label="Entfernen">{{ icon('trash') }}</button>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="group-note">Schalter aus: dieses Foto im Original zeigen. Pfeil: nach vorn – das erste ist das Titelbild.</p>
+    <div style="margin-top:14px"><label class="button full" for="more-photos">{{ icon('plus') }} Fotos hinzufügen</label></div>
+  </div>
+</div>
+
+{# ---- revise ---- #}
+<div class="sheet" id="sheet-revise" role="dialog" aria-label="Mit KI anpassen">
+  {{ sheet_head('Mit KI anpassen', left='<button class="sheet-text-button" data-close>Abbrechen</button>', right='<button class="sheet-text-button" form="revise-form">Anpassen</button>') }}
+  <div class="sheet-content">
+    <form id="revise-form">
+      <textarea class="ai-field" name="instruction" maxlength="1000" placeholder="Was soll anders werden?"></textarea>
+    </form>
+    <div class="suggestions">
+      {% for s in ['Titel kürzer', 'Freundlicher', 'Sachlicher', 'Mängel ehrlich betonen', 'Preis etwas runter', 'Mehr Details zu Maßen'] %}
+      <button type="button" class="chip" data-suggestion="{{ s }}">{{ s }}</button>
+      {% endfor %}
+    </div>
+    <p class="group-note">Geändert wird nur, was du sagst – deine Korrekturen bleiben.</p>
+  </div>
+</div>
+
+{# ---- rewrite from scratch ---- #}
+<div class="sheet" id="sheet-rewrite" role="dialog" aria-label="Komplett neu schreiben">
+  {{ sheet_head('Neu schreiben', left='<button class="sheet-text-button" data-close>Abbrechen</button>') }}
+  <div class="sheet-content">
+    <textarea class="ai-field" id="note" maxlength="1000" placeholder="Hinweis, optional – z. B. „ist Größe 28“">{{ item.note }}</textarea>
+    <p class="group-note">Schreibt alles neu aus den Fotos und überschreibt auch deine Änderungen.</p>
+    <div style="margin-top:14px"><button class="button primary full" data-rewrite>{{ icon('magic') }} Neu schreiben</button></div>
+  </div>
+</div>
+
+{# ---- publish ---- #}
+<div class="sheet" id="sheet-publish" role="dialog" aria-label="Veröffentlichen">
+  <div class="sheet-page" data-page-name="start">
+    {{ sheet_head('Veröffentlichen', right='<button class="sheet-text-button" data-close>Fertig</button>') }}
+    <div class="sheet-content">
+      <div class="group">
+        {% for p in platforms %}
+        <div class="row platform-row">
+          <button class="row-button" data-open-page="{{ p.id }}">
+            <span class="platform-badge" style="background:{{ p.color }}">{{ PLATFORM_BADGES[p.id] }}</span>
+            <span class="name">{{ p.name }}</span>
+          </button>
+          <label class="listed-switch"><span data-listed-text="{{ p.id }}">{{ 'online' if p.id in item.listings else '' }}</span>
+            <input type="checkbox" class="switch" data-listed="{{ p.id }}" {{ 'checked' if p.id in item.listings }} aria-label="{{ p.name }}: online"></label>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="group-note">Schalter = dort online. Antippen zeigt die Felder zum Kopieren.</p>
+      <div class="group" style="margin-top:16px">
+        <a class="row link" href="/items/{{ item.id }}/photos">{{ icon('download') }}<span>Fotos sichern</span></a>
+        <a class="row link wide-only" href="/items/{{ item.id }}/photos.zip">{{ icon('download') }}<span>Fotos als ZIP</span></a>
+      </div>
+    </div>
+  </div>
+  {% for p in platforms %}
+  {% set helper = fill_helper and p.fill_helper %}
+  <div class="sheet-page" data-page-name="{{ p.id }}" hidden>
+    {% set back_button %}<button class="sheet-text-button" data-open-page="start">{{ icon('back') }}Zurück</button>{% endset %}
+    {{ sheet_head(p.name, left=back_button, right='<button class="sheet-text-button" data-close>Fertig</button>') }}
+    <div class="sheet-content">
+      {% if helper %}
+      <a class="button primary full" href="{{ p.new_listing_url }}#troedel={{ item.id }}" target="_blank" rel="noopener" data-safari style="height:52px;font-size:16.5px">{{ icon('magic') }} Mit Ausfüllhilfe öffnen</a>
+      <p class="group-note">Füllt Fotos, Titel, Text und Preis aus. Abschicken bleibt bei dir. <a href="/fill-helper" style="color:var(--brand);font-weight:600">Einrichtung</a></p>
+      <h2 class="section-title">Oder von Hand</h2>
+      {% endif %}
+      <div class="group">
+        <div class="step" data-step="{{ p.id }}:photos">
+          <span class="number"><span>1</span>{{ icon('check') }}</span>
+          <div class="content"><div class="name">Fotos</div><div class="value">{{ item.photos|length }} Foto{{ 's' if item.photos|length != 1 }} in die Mediathek</div></div>
+          <a class="copy" href="/items/{{ item.id }}/photos" data-step-done>Sichern</a>
+        </div>
+        {% for field in p.fields %}
+        <div class="step" data-step="{{ p.id }}:{{ field.key }}">
+          <span class="number"><span>{{ loop.index + 1 }}</span>{{ icon('check') }}</span>
+          <div class="content">
+            <div class="name">{{ field.label }}{% if field.hint %}<span>· {{ field.hint }}</span>{% endif %}</div>
+            <div class="value{{ ' long' if field.long }}{{ ' empty' if not field.value }}" data-copy-source>{{ field.value or 'leer lassen' }}</div>
+          </div>
+          {% if field.value %}<button type="button" class="copy" data-copy>{{ icon('copy') }} Kopieren</button>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div style="margin-top:16px"><a class="button full" href="{{ p.new_listing_url }}" target="_blank" rel="noopener">{{ icon('external') }} {{ p.name }} öffnen</a></div>
+      <div class="group" style="margin-top:14px">
+        <label class="row"><span class="name">Online auf {{ p.name }}</span>
+          <span class="right"><input type="checkbox" class="switch" data-listed="{{ p.id }}" {{ 'checked' if p.id in item.listings }}></span></label>
+        {% if p.id in item.listings and item.listings[p.id].url %}<a class="row link" href="{{ item.listings[p.id].url }}" target="_blank" rel="noopener noreferrer">{{ icon('external') }}<span>Anzeige ansehen</span></a>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{# ---- photo viewer ---- #}
+{% if item.photos %}
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Fotos" hidden>
+  <div class="viewer-track" id="viewer-track">
+    {% for p in item.photos %}<div class="viewer-slide"><img alt="Foto {{ loop.index }}" draggable="false"></div>{% endfor %}
+  </div>
+  <div class="viewer-top">
+    <button class="glass-button round" type="button" data-viewer-close aria-label="Schließen">{{ icon('x') }}</button>
+    <span class="viewer-counter" id="viewer-counter"></span>
+    <span class="viewer-right"><button class="glass-button viewer-original" type="button" data-viewer-original aria-pressed="false" hidden>Original</button></span>
+  </div>
+  {% if item.photos|length > 1 %}
+  <button class="pager prev-photo" type="button" data-viewer-page="-1" aria-label="Vorheriges Foto">{{ icon('back') }}</button>
+  <button class="pager next-photo" type="button" data-viewer-page="1" aria-label="Nächstes Foto">{{ icon('next') }}</button>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block script %}
+<script nonce="{{ nonce }}">
+Troedel.item({
+  id: {{ item.id }},
+  status: {{ item.status|tojson }},
+  inProgress: {{ in_progress|tojson }},
+  photos: {{ item.photos|tojson }},
+  look: {{ look|tojson }},
+  lookNames: {{ LOOKS|tojson }},
+  changed: {{ changed|map('lookup', FIELDS)|list|tojson }},
+});
+</script>
+{% endblock %}

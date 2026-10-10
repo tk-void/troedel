@@ -1,0 +1,54 @@
+Trödel für den Mac
+==================
+
+Läuft auf Macs mit Apple-Chip (M1 und neuer), nicht auf Intel-Macs.
+
+Starten
+-------
+1. "Troedel" in den Ordner "Programme" ziehen.
+2. Trödel aus "Programme" oder dem Launchpad öffnen.
+   Beim ersten Mal weigert sich macOS, weil die App nicht signiert ist.
+   Dann: Systemeinstellungen > Datenschutz & Sicherheit, nach unten blättern
+   und bei "Troedel" auf "Dennoch öffnen" klicken. Auf älteren Systemen
+   genügt Rechtsklick auf die App > "Öffnen".
+3. Ein kleines Fenster "Trödel" geht auf, kurz danach der Browser.
+   Solange das Fenster offen ist, läuft Trödel.
+4. Beim allerersten Start zeigt das Fenster einen Einrichtungscode. Den im
+   Browser eintippen und ein Passwort wählen. Danach in den Einstellungen
+   einen KI-Anbieter wählen.
+
+Vom Handy aus benutzen
+----------------------
+Im Fenster "Im Heimnetz freigeben" ankreuzen. Fragt macOS, ob eingehende
+Verbindungen erlaubt sein sollen: erlauben. Das Fenster zeigt dann die
+Adresse fürs Handy und einen Code zum Scannen. Das Handy muss im selben WLAN
+sein. Nur im eigenen Heimnetz einschalten.
+
+Wo liegen meine Daten?
+----------------------
+Im Ordner "Troedel" in deinem Benutzerordner: Anzeigen, Fotos und
+Einstellungen. Zum Sichern diesen Ordner kopieren.
+
+Neue Version
+------------
+Die neue App in "Programme" ziehen und die alte ersetzen. Die Daten bleiben,
+wo sie sind.
+
+Beenden
+-------
+Das Fenster "Trödel" schließen.
+
+Es geht kein Fenster auf
+------------------------
+Im Ordner "Troedel" in deinem Benutzerordner liegt die Datei "troedel.log".
+Darin steht, woran es lag.
+
+Passwort vergessen
+------------------
+Trödel beenden, das Programm "Terminal" öffnen und eingeben:
+    /Applications/Troedel.app/Contents/Resources/python/bin/python3 -I -B -m troedel reset-password --data-dir ~/Troedel
+Den angezeigten Code brauchst du nicht: Trödel neu starten, das Fenster
+zeigt einen neuen.
+
+Lizenz: MIT. Die Lizenztexte, auch die der mitgelieferten Software Dritter,
+liegen in der App unter Contents/Resources.

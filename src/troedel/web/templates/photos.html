@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Fotos · Trödel{% endblock %}
+{% block nav_left %}<a class="back" href="/items/{{ item.id }}">{{ icon('back') }}Anzeige</a>{% endblock %}
+{% block nav_title %}Fotos sichern{% endblock %}
+{% block content %}
+<h1 class="large-title" data-large-title>Fotos sichern</h1>
+<div class="group"><div class="row" style="padding:12px 16px">{{ icon('info') }}
+  <span style="font-size:15px">Foto <strong>gedrückt halten → „Zu Fotos hinzufügen“</strong>. In der App der Plattform liegen sie dann ganz oben.</span></div></div>
+<div class="photo-stack" style="margin-top:16px">
+  {% for p in item.photos %}<img src="{{ photo_url(p) }}" alt="Foto {{ loop.index }}">{% endfor %}
+</div>
+<div style="margin-top:20px" class="wide-only"><a class="button" href="/items/{{ item.id }}/photos.zip">{{ icon('download') }} Alle als ZIP</a></div>
+{% endblock %}

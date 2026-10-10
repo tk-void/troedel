@@ -1,0 +1,76 @@
+[project]
+name = "troedel"
+version = "0.1.0"
+description = "Photo in, classified ad out: drafts listings for second-hand marketplaces."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+keywords = ["second-hand", "classifieds", "listing", "self-hosted"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: German",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.12",
+    "pillow>=11",
+    "pillow-heif>=0.20",
+    "httpx>=0.27",
+    "argon2-cffi>=23.1",
+    "anthropic>=1.0",
+]
+
+[project.optional-dependencies]
+# Background removal and retouching run locally and pull in onnxruntime,
+# which is large. Without this extra the photos stay as they were taken.
+cutout = ["rembg[cpu]>=2.0.60"]
+# The QR code in the window of the downloads (`troedel window`): the address
+# for the phone, without typing it. Pure Python, no dependencies of its own.
+desktop = ["segno>=1.6"]
+dev = ["pytest>=8.3", "ruff>=0.7"]
+
+[project.urls]
+Homepage = "https://github.com/tk-void/troedel"
+Issues = "https://github.com/tk-void/troedel/issues"
+Changelog = "https://github.com/tk-void/troedel/blob/main/CHANGELOG.md"
+
+[project.scripts]
+troedel = "troedel.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/troedel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests", "tools"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = [
+    "S101",  # assert is how pytest works
+    "S603",  # subprocess with a fixed argument list, never a shell
+    "S607",  # git and claude are looked up on PATH on purpose
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares request parts through calls in argument defaults.
+extend-immutable-calls = ["fastapi.File", "fastapi.Form"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S104", "S105", "S106", "S108"]

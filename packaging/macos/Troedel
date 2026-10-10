@@ -1,0 +1,6 @@
+#!/bin/bash
+# What the app runs: the bundled Python with Troedel's small window.
+# -B: write nothing into the app. It may sit somewhere read-only, and a
+# changed app no longer matches its seal.
+here="$(cd "$(dirname "$0")/../Resources" && pwd)" || exit 1
+exec "$here/python/bin/python3" -I -B -m troedel window "$@"
