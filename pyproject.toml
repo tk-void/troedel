@@ -1,6 +1,6 @@
 [project]
 name = "troedel"
-version = "0.1.0"
+version = "0.1.1"
 description = "Photo in, classified ad out: drafts listings for second-hand marketplaces."
 readme = "README.md"
 license = "MIT"

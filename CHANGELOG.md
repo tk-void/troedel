@@ -6,6 +6,18 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-10
+
+### Fixed
+
+- Claude Code CLI: the downloads reported `claude` as not installed, because
+  a program started from the Finder or the Start menu does not get the
+  `PATH` of a terminal. Trödel now also looks in the usual install folders.
+- Claude Code CLI on macOS: `claude` answered "not logged in" although it
+  was, because it did not get the user name it needs for the keychain.
+- A `claude` that is not signed in is reported as such, instead of asking
+  for an API key this provider does not have.
+
 ## [0.1.0] - 2026-10-10
 
 First public version.
