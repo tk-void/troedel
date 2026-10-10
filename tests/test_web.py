@@ -500,7 +500,12 @@ class TestFillHelper:
         assert user.post("/settings/fill-helper", data={"enable": "1"}).headers["location"] == "/fill-helper"
         response = user.post("/fill-helper/install")
         assert response.status_code == 303
-        script = site.stranger().get(response.headers["location"])
+        # Back to the page, which links to the script and shows its address
+        # to paste into a userscript manager that did not open by itself.
+        page = user.get(response.headers["location"]).text
+        link = re.search(r'href="(/troedel\.user\.js\?install=[^"]+)"', page).group(1)
+        assert f'{link}</code>' in page
+        script = site.stranger().get(link)
         assert script.status_code == 200
         return re.search(r"const TOKEN = '([^']+)'", script.text).group(1)
 
@@ -515,6 +520,12 @@ class TestFillHelper:
         ):
             assert f'data-browser="{browser}"' in page and host in page, browser
         assert page.count('rel="noopener noreferrer"') >= 4
+
+    def test_a_made_up_install_code_offers_nothing(self, site: Site, user: TestClient) -> None:
+        user.post("/settings/fill-helper", data={"enable": "1"})
+        page = user.get("/fill-helper?install=guess").text
+        assert "troedel.user.js" not in page
+        assert 'action="/fill-helper/install"' in page
 
     def test_off_by_default(self, site: Site, user: TestClient) -> None:
         assert user.post("/fill-helper/install").status_code == 404

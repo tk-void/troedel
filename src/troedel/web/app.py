@@ -877,13 +877,16 @@ def create_app(settings: Settings, *, worker: Worker | None = None, start: bool 
         return mark_listed(item_id, platform, body.url)
 
     @app.get("/fill-helper", response_class=HTMLResponse)
-    async def fill_helper_page(request: Request) -> HTMLResponse:
+    async def fill_helper_page(request: Request, install: str = "") -> HTMLResponse:
+        _token, until = installs.get(install, ("", 0.0))
         return page(
             request,
             "fill_helper.html",
             base=base(request),
             enabled=db.settings()["fill_helper"] == "1",
             installed=ctx.auth.helper_count(),
+            # A script made a moment ago, waiting to be installed.
+            script=f"/troedel.user.js?install={install}" if until > time.monotonic() else "",
         )
 
     @app.post("/fill-helper/install")
@@ -898,7 +901,12 @@ def create_app(settings: Settings, *, worker: Worker | None = None, start: bool 
         code = secrets.token_urlsafe(24)
         token = ctx.auth.new_helper_token(request.headers.get("user-agent", ""))
         installs[code] = (token, now + INSTALL_SECONDS)
-        return RedirectResponse(f"/troedel.user.js?install={code}", status_code=303)
+        # Back to the page, which then links to the script. Sending the
+        # browser straight on to the script looked like nothing happened
+        # with Tampermonkey in Chrome: it takes such a jump away from the
+        # browser and then shows nothing. A link that is clicked it handles,
+        # and a page can offer the address to paste when even that fails.
+        return RedirectResponse(f"/fill-helper?install={code}#install", status_code=303)
 
     @app.get("/troedel.user.js")
     async def userscript(request: Request, install: str = "") -> Response:

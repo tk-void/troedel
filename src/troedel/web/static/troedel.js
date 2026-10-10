@@ -1049,6 +1049,11 @@
     else if (/Edg\//.test(ua)) browser = 'edge';
     else if (/Chrome\//.test(ua)) browser = 'chrome';
     else if (/Safari\//.test(ua)) browser = 'safari';
+    const copy = $('#copy-script-url');
+    if (copy) copy.addEventListener('click', async () => {
+      if (await copyText($('#script-url').textContent)) toast(STRINGS.copied.trim());
+      else showError(STRINGS.copyFailed);
+    });
     const mine = $('.manager[data-browser="' + browser + '"]');
     if (!mine) return;
     $('.this-browser', mine).hidden = false;

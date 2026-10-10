@@ -39,6 +39,11 @@ Each installation gets its own access token, created when you press
   item as listed. It cannot change or delete listings, read settings, or
   reach anything else.
 - The install link works for a few minutes, then it is dead.
+  *Jetzt installieren* opens it, and the userscript manager offers to
+  install. If nothing opens, as can happen with Tampermonkey in Chrome, the
+  page shows the address to paste into the manager's "install from URL".
+  Chrome also needs *Allow user scripts* switched on in Tampermonkey's
+  extension details, or nothing runs at all.
 - Switching the helper off in Trödel revokes every token at once.
 - Requests are made by the userscript manager, not by the marketplace's
   page, so the page never sees the token.
